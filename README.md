@@ -56,3 +56,57 @@ public class DatabaseQuery {
         }
     }
 }
+// JDBC connect
+import java.sql.*;
+import java.util.Scanner;
+public class Hostel_main {
+
+	public static void main(String[] args) throws ClassNotFoundException {
+		Class.forName("com.mysql.cj.jdbc.Driver");
+		String url = "jdbc:mysql://localhost:3306/hostel_info";
+		String user ="root";
+		String password ="password";
+		try (Connection connection = DriverManager.getConnection(url, user, password)) {
+            // Prompt user to input Registration_No
+            int registrationNo = getRegistrationNoFromUser();
+
+            // Query to retrieve student details including Room_No, Hostel_Name, Payment_Details, and Attendance
+            String query = "SELECT s.Name, s.Room_No, f.Payment_Details, a.Date, a.Status " +
+                           "FROM STUDENT s " +
+                           "JOIN ROOM r ON s.Room_No = r.Room_No " +
+                           "JOIN FEE f ON s.Registration_No = f.Registration_No " +
+                           "LEFT JOIN ATTENDANCE a ON s.Registration_No= a.Registration_No " +
+                           "WHERE s.Registration_No = ?";
+
+            try (PreparedStatement statement = connection.prepareStatement(query)) {
+                statement.setInt(1, registrationNo);
+                ResultSet resultSet = statement.executeQuery();
+
+                // Print student details
+                while (resultSet.next()) {
+                    String name = resultSet.getString("Name");
+                    int roomNo = resultSet.getInt("Room_No");
+                    String paymentDetails = resultSet.getString("Payment_Details");
+                    Date date = resultSet.getDate("Date");
+                    String status = resultSet.getString("Status");
+
+                    System.out.println("Name: " + name);
+                    System.out.println("Room No: " + roomNo);
+                    System.out.println("Payment Details: " + paymentDetails);
+                    System.out.println("Attendance Date: " + (date != null ? date.toString() : "N/A"));
+                    System.out.println("Attendance Status: " + (status != null ? status : "N/A"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Method to prompt user for Registration_No input
+    private static int getRegistrationNoFromUser() {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Registration No: ");
+        return scanner.nextInt();
+	}
+
+}
